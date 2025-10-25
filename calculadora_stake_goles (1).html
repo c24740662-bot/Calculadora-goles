@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Calculadora de Stake – +2.5 / -3.5 y Asiático</title>
+<style>
+  :root{--bg:#0f172a;--panel:#111827;--soft:#1f2937;--text:#e5e7eb;--muted:#9ca3af;--brand:#22d3ee;--ok:#22c55e;--warn:#f59e0b;--bad:#ef4444}
+  html,body{background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;margin:0;padding:0}
+  .wrap{max-width:1050px;margin:24px auto;padding:0 16px}
+  h1{font-size:clamp(20px,3vw,30px);margin:0 0 16px}
+  .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+  .tab{background:var(--soft);color:var(--text);border:1px solid #222;border-radius:12px;padding:10px 14px;cursor:pointer}
+  .tab.active{outline:2px solid var(--brand)}
+  .panel{display:none;background:var(--panel);border:1px solid #222;border-radius:16px;padding:18px}
+  .panel.active{display:block}
+  .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
+  .card{background:#0b1220;border:1px solid #1e293b;border-radius:12px;padding:14px}
+  label{font-size:13px;color:var(--muted)}
+  input,select{width:100%;padding:10px;border-radius:10px;border:1px solid #334155;background:#0b1220;color:var(--text)}
+  .row{display:flex;gap:10px;align-items:center}
+  .num{font-variant-numeric:tabular-nums}
+  .btn{background:var(--brand);color:#001118;border:0;padding:10px 14px;border-radius:10px;font-weight:600;cursor:pointer}
+  .btn:disabled{opacity:.6}
+  .pill{display:inline-block;border-radius:999px;padding:4px 10px;font-weight:600}
+  .small{font-size:12px;color:var(--muted)}
+  .kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px}
+  .kpi .card{display:flex;flex-direction:column;gap:4px}
+  .pos{color:var(--ok)}
+  .neg{color:var(--bad)}
+  .neutral{color:var(--warn)}
+  .foot{margin-top:16px;color:var(--muted);font-size:12px}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Calculadora de Stake — Total de Goles</h1>
+    <div class="tabs">
+      <button class="tab active" data-tab="ft">Partido Completo (+2.5 & −3.5)</button>
+      <button class="tab" data-tab="asian">Asiático (+2.5 & −3.0)</button>
+    </div>
+
+    <!-- PANEL FULL TIME -->
+    <section id="ft" class="panel active">
+      <div class="grid">
+        <div class="card" style="grid-column: span 4">
+          <h3>Entradas</h3>
+          <label>Monto total (unidades)</label>
+          <input id="ft_total" type="number" value="100" min="1" />
+          <div class="row" style="margin-top:10px;gap:12px">
+            <div style="flex:1">
+              <label>Cuota +2.5</label>
+              <input id="ft_o" type="number" value="2.15" step="0.01" />
+            </div>
+            <div style="flex:1">
+              <label>Cuota −3.5</label>
+              <input id="ft_u" type="number" value="1.27" step="0.01" />
+            </div>
+          </div>
+          <div class="card" style="margin-top:12px">
+            <label>Modo de reparto</label>
+            <select id="ft_mode">
+              <option value="ratio">Ratio fijo recomendado (elige %)</option>
+              <option value="g0">Ajustar verde mínimo en 0–2 (g)</option>
+              <option value="cap4">Limitar pérdida en 4+ (L)</option>
+            </select>
+            <div id="ft_ratio_box" style="margin-top:8px">
+              <label>% al +2.5 (resto al −3.5)</label>
+              <input id="ft_ratio" type="number" value="28" step="1" min="0" max="100" />
+              <div class="small">Presets: <span class="pill" data-ratio="20">20/80</span> <span class="pill" data-ratio="25">25/75</span> <span class="pill" data-ratio="28">28/72</span></div>
+            </div>
+            <div id="ft_g0_box" style="display:none;margin-top:8px">
+              <label>g = ganancia deseada en 0–2 (unidades)</label>
+              <input id="ft_g0" type="number" value="2" step="1" />
+            </div>
+            <div id="ft_cap4_box" style="display:none;margin-top:8px">
+              <label>L = pérdida máxima permitida en 4+ (unidades)</label>
+              <input id="ft_cap4" type="number" value="40" step="1" />
+            </div>
+            <button class="btn" id="ft_calc" style="margin-top:10px">Calcular</button>
+          </div>
+        </div>
+        <div class="card" style="grid-column: span 8">
+          <h3>Stakes sugeridos</h3>
+          <div id="ft_stakes" class="num" style="font-size:20px;margin-bottom:6px">—</div>
+          <div class="kpi">
+            <div class="card"><div class="small">0–2 goles</div><div id="ft_s1" class="num">—</div></div>
+            <div class="card"><div class="small">3 goles</div><div id="ft_s2" class="num">—</div></div>
+            <div class="card"><div class="small">4+ goles</div><div id="ft_s3" class="num">—</div></div>
+          </div>
+          <div class="foot">Ganancia = pago total − monto total apostado. Se usa formato decimal.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PANEL ASIAN -->
+    <section id="asian" class="panel">
+      <div class="grid">
+        <div class="card" style="grid-column: span 4">
+          <h3>Entradas</h3>
+          <label>Monto total (unidades)</label>
+          <input id="as_total" type="number" value="100" min="1" />
+          <div class="row" style="margin-top:10px;gap:12px">
+            <div style="flex:1">
+              <label>Cuota +2.5</label>
+              <input id="as_o" type="number" value="2.18" step="0.01" />
+            </div>
+            <div style="flex:1">
+              <label>Cuota −3.0 (asiático)</label>
+              <input id="as_u" type="number" value="1.38" step="0.01" />
+            </div>
+          </div>
+          <div class="card" style="margin-top:12px">
+            <label>Objetivo</label>
+            <select id="as_mode">
+              <option value="s4">Fijar verde mínimo en 4+ (s)</option>
+              <option value="ratio">Ratio fijo (elige % al +2.5)</option>
+            </select>
+            <div id="as_s4_box" style="margin-top:8px">
+              <label>s = ganancia mínima en 4+ (unidades)</label>
+              <input id="as_s4" type="number" value="2" step="1" />
+            </div>
+            <div id="as_ratio_box" style="display:none;margin-top:8px">
+              <label>% al +2.5 (resto al −3.0)</label>
+              <input id="as_ratio" type="number" value="42" step="1" min="0" max="100" />
+              <div class="small">Presets: <span class="pill" data-asratio="35">35/65</span> <span class="pill" data-asratio="40">40/60</span> <span class="pill" data-asratio="42">42/58</span> <span class="pill" data-asratio="45">45/55</span></div>
+            </div>
+            <button class="btn" id="as_calc" style="margin-top:10px">Calcular</button>
+          </div>
+        </div>
+        <div class="card" style="grid-column: span 8">
+          <h3>Stakes sugeridos</h3>
+          <div id="as_stakes" class="num" style="font-size:20px;margin-bottom:6px">—</div>
+          <div class="kpi">
+            <div class="card"><div class="small">0–2 goles</div><div id="as_s1" class="num">—</div></div>
+            <div class="card"><div class="small">3 goles</div><div id="as_s2" class="num">—</div></div>
+            <div class="card"><div class="small">4+ goles</div><div id="as_s3" class="num">—</div></div>
+          </div>
+          <div class="foot">En −3.0 asiático, con 3 goles esa parte se anula (void) y retorna el stake.</div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+<script>
+// helpers
+const fmt = n => (isFinite(n)? (n>=0? "+ "+n.toFixed(2): "− "+Math.abs(n).toFixed(2)) : "—");
+const money = n => (isFinite(n)? n.toFixed(2): "—");
+function setText(id, text, mode){
+  const el = document.getElementById(id);
+  el.textContent = text;
+  if(mode){el.classList.remove("pos","neg","neutral");el.classList.add(mode)}
+}
+
+// Tabs
+for(const b of document.querySelectorAll('.tab')){
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    b.classList.add('active');
+    document.getElementById(b.dataset.tab).classList.add('active');
+  })
+}
+
+// Presets pills
+for(const p of document.querySelectorAll('#ft_ratio_box .pill')){
+  p.addEventListener('click',()=>{
+    document.getElementById('ft_ratio').value = p.dataset.ratio
+  })
+}
+for(const p of document.querySelectorAll('#as_ratio_box .pill')){
+  p.addEventListener('click',()=>{
+    document.getElementById('as_ratio').value = p.dataset.asratio
+  })
+}
+
+// Mode switchers
+const ftMode = document.getElementById('ft_mode');
+ftMode.addEventListener('change',()=>{
+  document.getElementById('ft_ratio_box').style.display = ftMode.value==='ratio'? 'block':'none';
+  document.getElementById('ft_g0_box').style.display    = ftMode.value==='g0'   ? 'block':'none';
+  document.getElementById('ft_cap4_box').style.display  = ftMode.value==='cap4' ? 'block':'none';
+});
+
+const asMode = document.getElementById('as_mode');
+asMode.addEventListener('change',()=>{
+  document.getElementById('as_s4_box').style.display    = asMode.value==='s4'? 'block':'none';
+  document.getElementById('as_ratio_box').style.display = asMode.value==='ratio'? 'block':'none';
+});
+
+// FT calculations
+function calcFT(){
+  const T = parseFloat(document.getElementById('ft_total').value||0);
+  const O = parseFloat(document.getElementById('ft_o').value||0);
+  const U = parseFloat(document.getElementById('ft_u').value||0);
+  let x=0; // stake over
+  if(ftMode.value==='ratio'){
+    const r = Math.max(0,Math.min(100, parseFloat(document.getElementById('ft_ratio').value||0)))/100;
+    x = T*r;
+  }else if(ftMode.value==='g0'){
+    const g = parseFloat(document.getElementById('ft_g0').value||0);
+    // y*U - T = g ; y = T - x => (T - x)*U - T = g => x = (T*(U-1) - g)/U
+    x = (T*(U-1) - g)/U;
+  }else{
+    const L = parseFloat(document.getElementById('ft_cap4').value||0);
+    // x*O - T = -L  => x = (T - L)/O
+    x = (T - L)/O;
+  }
+  x = Math.max(0, Math.min(T, x));
+  const y = T - x;
+  const s0_2 = y*U - T;         // 0-2 goles
+  const s3   = x*O + y*U - T;    // 3 goles
+  const s4p  = x*O - T;          // 4+ goles
+  document.getElementById('ft_stakes').innerHTML = `+2.5: <b>${money(x)}</b>  |  −3.5: <b>${money(y)}</b>`;
+  setText('ft_s1', fmt(s0_2), s0_2>=0? 'pos':'neg');
+  setText('ft_s2', fmt(s3),   s3>=0?   'pos':'neg');
+  setText('ft_s3', fmt(s4p),  s4p>=0?  'pos':'neg');
+}
+
+// ASIAN calculations
+function calcAS(){
+  const T = parseFloat(document.getElementById('as_total').value||0);
+  const O = parseFloat(document.getElementById('as_o').value||0); // +2.5
+  const U = parseFloat(document.getElementById('as_u').value||0); // -3.0
+  let x=0; // stake over 2.5
+  if(asMode.value==='s4'){
+    const s = parseFloat(document.getElementById('as_s4').value||0);
+    // Profit 4+ = x*O - T = s  =>  x = (T + s)/O
+    x = (T + s)/O;
+  }else{
+    const r = Math.max(0,Math.min(100, parseFloat(document.getElementById('as_ratio').value||0)))/100;
+    x = T*r;
+  }
+  x = Math.max(0, Math.min(T, x));
+  const y = T - x; // stake under -3.0
+  const s0_2 = y*U - T;          // 0-2 goles
+  const s3   = x*(O - 1);        // 3 goles (void en -3.0)
+  const s4p  = x*O - T;          // 4+ goles
+  document.getElementById('as_stakes').innerHTML = `+2.5: <b>${money(x)}</b>  |  −3.0 (asiático): <b>${money(y)}</b>`;
+  setText('as_s1', fmt(s0_2), s0_2>=0? 'pos':'neg');
+  setText('as_s2', fmt(s3),   s3>=0?   'pos':'neg');
+  setText('as_s3', fmt(s4p),  s4p>=0?  'pos':'neg');
+}
+
+// init
+calcFT();
+calcAS();
+
+document.getElementById('ft_calc').addEventListener('click', calcFT);
+document.getElementById('as_calc').addEventListener('click', calcAS);
+</script>
+</body>
+</html>
